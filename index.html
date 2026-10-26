@@ -1,1 +1,120 @@
 
+function doGet() {
+  return HtmlService.createHtmlOutputFromFile('Index')
+    .setTitle('Entradas y Control de Acceso');
+}
+
+function obtenerHoja() {
+  const hoja = SpreadsheetApp.getActiveSpreadsheet()
+    .getSheetByName('Entradas');
+  if (!hoja) throw new Error('No existe la hoja Entradas.');
+  return hoja;
+}
+
+function generarCodigoUnico() {
+  return 'T-' + Utilities.getUuid()
+    .replace(/-/g, '').substring(0, 10).toUpperCase();
+}
+
+function registrarAsistente(datos) {
+  const nombre = String(datos.nombre || '').trim();
+  const apellido = String(datos.apellido || '').trim();
+  const documento = String(datos.documento || '').trim();
+
+  if (!nombre || !apellido) {
+    throw new Error('Ingresá nombre y apellido.');
+  }
+
+  const hoja = obtenerHoja();
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+
+  try {
+    let codigo;
+    const existentes = hoja.getLastRow() > 1
+      ? hoja.getRange(2, 1, hoja.getLastRow() - 1, 1)
+          .getDisplayValues().flat()
+      : [];
+
+    do {
+      codigo = generarCodigoUnico();
+    } while (existentes.includes(codigo));
+
+    hoja.appendRow([
+      codigo, nombre, apellido, '', documento,
+      'General', 0, new Date(), ''
+    ]);
+
+    return { codigo, nombre, apellido, documento };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function validarIngreso(codigo) {
+  codigo = String(codigo || '').trim().toUpperCase();
+  if (!codigo) throw new Error('Ingresá o escaneá un código.');
+
+  const hoja = obtenerHoja();
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+
+  try {
+    const ultimaFila = hoja.getLastRow();
+    if (ultimaFila < 2) {
+      return { estado: 'invalida', mensaje: 'No hay entradas registradas.' };
+    }
+
+    const datos = hoja.getRange(2, 1, ultimaFila - 1, 9).getValues();
+    const indice = datos.findIndex(fila =>
+      String(fila[0]).trim().toUpperCase() === codigo
+    );
+
+    if (indice === -1) {
+      return { estado: 'invalida', mensaje: 'Entrada no válida: código inexistente.' };
+    }
+
+    const fila = indice + 2;
+    const asistente = datos[indice];
+
+    if (asistente[8]) {
+      return {
+        estado: 'usada',
+        mensaje: 'Esta entrada ya fue utilizada.',
+        nombre: asistente[1] + ' ' + asistente[2],
+        hora: Utilities.formatDate(new Date(asistente[8]), Session.getScriptTimeZone(), 'HH:mm')
+      };
+    }
+
+    const ahora = new Date();
+    hoja.getRange(fila, 9).setValue(ahora);
+
+    return {
+      estado: 'ok',
+      mensaje: '¡Ingreso autorizado!',
+      nombre: asistente[1] + ' ' + asistente[2],
+      hora: Utilities.formatDate(ahora, Session.getScriptTimeZone(), 'HH:mm')
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function listarAsistentes() {
+  const hoja = obtenerHoja();
+  const ultimaFila = hoja.getLastRow();
+  if (ultimaFila < 2) return [];
+
+  return hoja.getRange(2, 1, ultimaFila - 1, 9)
+    .getValues()
+    .map(f => ({
+      codigo: String(f[0]),
+      nombre: String(f[1]),
+      apellido: String(f[2]),
+      documento: String(f[4]),
+      ingreso: f[8]
+        ? Utilities.formatDate(new Date(f[8]), Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm')
+        : ''
+    }));
+}
+
