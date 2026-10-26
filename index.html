@@ -9,78 +9,206 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 500px;
-      margin: 30px auto;
-      padding: 20px;
+      max-width: 520px;
+      margin: 25px auto;
+      padding: 16px;
       text-align: center;
+      background: #f7f7f7;
+      color: #222;
+    }
+    h1 { font-size: 27px; }
+    button, input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 13px;
+      margin: 7px 0;
+      font-size: 16px;
+      border-radius: 8px;
     }
     button {
-      padding: 14px 20px;
-      margin: 10px;
-      font-size: 16px;
+      border: 0;
+      background: #333;
+      color: white;
       cursor: pointer;
     }
-    #lector { width: 100%; margin-top: 20px; }
-    #resultado { font-size: 18px; margin-top: 20px; }
+    input { border: 1px solid #bbb; }
+    #lector { width: 100%; margin-top: 15px; }
+    #resultado {
+      margin: 18px 0;
+      padding: 18px 10px;
+      border-radius: 10px;
+      background: white;
+      overflow-wrap: anywhere;
+    }
+    .ok { background: #d8f3dc !important; }
+    .error { background: #ffe0e0 !important; }
+    .aviso { background: #fff0c2 !important; }
+    .pequeno { font-size: 13px; color: #555; }
   </style>
 </head>
 <body>
   <h1>Control de entradas</h1>
-  <p>Prueba de cámara y lectura de QR</p>
+  <p>Escaneá el QR o ingresá el código manualmente.</p>
+
   <button id="iniciar">Abrir cámara</button>
   <button id="detener">Detener cámara</button>
+
   <div id="lector"></div>
-  <div id="resultado">Esperando para iniciar…</div>
 
-  <script>
-    let lector = null;
-    let activo = false;
+  <div id="resultado" role="status">
+    Esperando una entrada…
+  </div>
 
-    document.getElementById('iniciar').onclick = async () => {
-      const resultado = document.getElementById('resultado');
-      resultado.textContent = 'Solicitando acceso a la cámara…';
+  <input id="codigo" type="text" placeholder="Ej.: T-ABC123456">
+  <button id="validar">Validar ingreso</button>
 
-      try {
-        if (!window.isSecureContext) {
-          throw new Error('La página debe abrirse mediante HTTPS.');
-        }
+  <p class="pequeno">
+    Cada código se puede utilizar una sola vez.
+  </p>
 
-        if (!lector) lector = new Html5Qrcode('lector');
+<script>
+  const URL_APPS_SCRIPT =
+    'https://script.google.com/macros/s/AKfycbwyISX3l7CsMUqn7aTFlFteR5W0ohdMEjubfZgsF4UrM5RwLFctsv2SYFcjdxTsHfdg/exec';
 
-        const camaras = await Html5Qrcode.getCameras();
-        if (!camaras.length) throw new Error('No se encontraron cámaras.');
+  let lector = null;
+  let activo = false;
+  let procesando = false;
 
-        const trasera = camaras.find(c =>
-          /back|rear|environment|trasera|posterior/i.test(c.label)
-        ) || camaras[camaras.length - 1];
+  const resultado = document.getElementById('resultado');
+  const campoCodigo = document.getElementById('codigo');
 
-        await lector.start(
-          trasera.id,
-          { fps: 10, qrbox: { width: 230, height: 230 } },
-          texto => {
-            resultado.textContent = 'QR leído: ' + texto;
-          },
-          () => {}
+  function mostrar(mensaje, clase = '') {
+    resultado.className = clase;
+    resultado.textContent = mensaje;
+  }
+
+  function validarCodigo(codigo) {
+    codigo = String(codigo || '').trim().toUpperCase();
+
+    if (!codigo) {
+      mostrar('Ingresá o escaneá un código.', 'aviso');
+      return;
+    }
+
+    if (procesando) return;
+    procesando = true;
+    mostrar('Validando entrada…');
+
+    const callback = 'respuestaQR_' + Date.now() + '_' +
+      Math.floor(Math.random() * 100000);
+
+    const script = document.createElement('script');
+    let terminado = false;
+
+    const finalizar = () => {
+      if (terminado) return;
+      terminado = true;
+      procesando = false;
+      delete window[callback];
+      script.remove();
+      clearTimeout(limite);
+    };
+
+    const limite = setTimeout(() => {
+      finalizar();
+      mostrar(
+        'No se pudo confirmar el ingreso. Revisá la conexión e intentá nuevamente.',
+        'error'
+      );
+    }, 15000);
+
+    window[callback] = respuesta => {
+      finalizar();
+
+      if (!respuesta || !respuesta.ok) {
+        mostrar(
+          'Error: ' + (respuesta?.error || 'No se pudo validar la entrada.'),
+          'error'
         );
+        return;
+      }
 
-        activo = true;
-        resultado.textContent = 'Cámara activa. Apuntá al código QR.';
-      } catch (e) {
-        resultado.textContent = 'No se pudo abrir la cámara: ' + e.message;
+      const r = respuesta.resultado || {};
+
+      if (r.estado === 'ok') {
+        mostrar('✅ ' + r.mensaje + '\n' + (r.nombre || '') +
+          '\nHora: ' + (r.hora || ''), 'ok');
+        campoCodigo.value = '';
+      } else if (r.estado === 'usada') {
+        mostrar('⚠️ ' + r.mensaje + '\n' + (r.nombre || '') +
+          '\nPrimer ingreso: ' + (r.hora || ''), 'aviso');
+      } else {
+        mostrar('❌ ' + (r.mensaje || 'Entrada no válida.'), 'error');
       }
     };
 
-    document.getElementById('detener').onclick = async () => {
-      try {
-        if (lector && activo) await lector.stop();
-        if (lector) lector.clear();
-        activo = false;
-        resultado.textContent = 'Cámara detenida.';
-      } catch (e) {
-        document.getElementById('resultado').textContent =
-          'Error al detener la cámara: ' + e.message;
-      }
+    script.onerror = () => {
+      finalizar();
+      mostrar(
+        'No se pudo conectar con Google. Verificá el acceso de la aplicación.',
+        'error'
+      );
     };
-  </script>
+
+    const parametros = new URLSearchParams({
+      action: 'validar',
+      codigo: codigo,
+      callback: callback
+    });
+
+    script.src = URL_APPS_SCRIPT + '?' + parametros.toString();
+    document.body.appendChild(script);
+  }
+
+  document.getElementById('validar').addEventListener('click', () => {
+    validarCodigo(campoCodigo.value);
+  });
+
+  campoCodigo.addEventListener('keydown', evento => {
+    if (evento.key === 'Enter') validarCodigo(campoCodigo.value);
+  });
+
+  document.getElementById('iniciar').addEventListener('click', async () => {
+    try {
+      if (!lector) lector = new Html5Qrcode('lector');
+
+      mostrar('Solicitando acceso a la cámara…');
+
+      const camaras = await Html5Qrcode.getCameras();
+      if (!camaras.length) throw new Error('No se encontraron cámaras.');
+
+      const trasera = camaras.find(c =>
+        /back|rear|environment|trasera|posterior/i.test(c.label)
+      ) || camaras[camaras.length - 1];
+
+      await lector.start(
+        trasera.id,
+        { fps: 10, qrbox: { width: 230, height: 230 } },
+        texto => {
+          if (procesando) return;
+          campoCodigo.value = texto.trim();
+          validarCodigo(texto);
+        },
+        () => {}
+      );
+
+      activo = true;
+      mostrar('Cámara activa. Apuntá al código QR.');
+    } catch (error) {
+      mostrar('No se pudo iniciar la cámara: ' + error.message, 'error');
+    }
+  });
+
+  document.getElementById('detener').addEventListener('click', async () => {
+    try {
+      if (lector && activo) await lector.stop();
+      if (lector) lector.clear();
+      activo = false;
+      mostrar('Cámara detenida.');
+    } catch (error) {
+      mostrar('Error al detener la cámara: ' + error.message, 'error');
+    }
+  });
+</script>
 </body>
 </html>
