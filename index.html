@@ -1,120 +1,86 @@
 
-function doGet() {
-  return HtmlService.createHtmlOutputFromFile('Index')
-    .setTitle('Entradas y Control de Acceso');
-}
-
-function obtenerHoja() {
-  const hoja = SpreadsheetApp.getActiveSpreadsheet()
-    .getSheetByName('Entradas');
-  if (!hoja) throw new Error('No existe la hoja Entradas.');
-  return hoja;
-}
-
-function generarCodigoUnico() {
-  return 'T-' + Utilities.getUuid()
-    .replace(/-/g, '').substring(0, 10).toUpperCase();
-}
-
-function registrarAsistente(datos) {
-  const nombre = String(datos.nombre || '').trim();
-  const apellido = String(datos.apellido || '').trim();
-  const documento = String(datos.documento || '').trim();
-
-  if (!nombre || !apellido) {
-    throw new Error('Ingresá nombre y apellido.');
-  }
-
-  const hoja = obtenerHoja();
-  const lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-
-  try {
-    let codigo;
-    const existentes = hoja.getLastRow() > 1
-      ? hoja.getRange(2, 1, hoja.getLastRow() - 1, 1)
-          .getDisplayValues().flat()
-      : [];
-
-    do {
-      codigo = generarCodigoUnico();
-    } while (existentes.includes(codigo));
-
-    hoja.appendRow([
-      codigo, nombre, apellido, '', documento,
-      'General', 0, new Date(), ''
-    ]);
-
-    return { codigo, nombre, apellido, documento };
-  } finally {
-    lock.releaseLock();
-  }
-}
-
-function validarIngreso(codigo) {
-  codigo = String(codigo || '').trim().toUpperCase();
-  if (!codigo) throw new Error('Ingresá o escaneá un código.');
-
-  const hoja = obtenerHoja();
-  const lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-
-  try {
-    const ultimaFila = hoja.getLastRow();
-    if (ultimaFila < 2) {
-      return { estado: 'invalida', mensaje: 'No hay entradas registradas.' };
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Control de entradas</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 500px;
+      margin: 30px auto;
+      padding: 20px;
+      text-align: center;
     }
-
-    const datos = hoja.getRange(2, 1, ultimaFila - 1, 9).getValues();
-    const indice = datos.findIndex(fila =>
-      String(fila[0]).trim().toUpperCase() === codigo
-    );
-
-    if (indice === -1) {
-      return { estado: 'invalida', mensaje: 'Entrada no válida: código inexistente.' };
+    button {
+      padding: 14px 20px;
+      margin: 10px;
+      font-size: 16px;
+      cursor: pointer;
     }
+    #lector { width: 100%; margin-top: 20px; }
+    #resultado { font-size: 18px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Control de entradas</h1>
+  <p>Prueba de cámara y lectura de QR</p>
+  <button id="iniciar">Abrir cámara</button>
+  <button id="detener">Detener cámara</button>
+  <div id="lector"></div>
+  <div id="resultado">Esperando para iniciar…</div>
 
-    const fila = indice + 2;
-    const asistente = datos[indice];
+  <script>
+    let lector = null;
+    let activo = false;
 
-    if (asistente[8]) {
-      return {
-        estado: 'usada',
-        mensaje: 'Esta entrada ya fue utilizada.',
-        nombre: asistente[1] + ' ' + asistente[2],
-        hora: Utilities.formatDate(new Date(asistente[8]), Session.getScriptTimeZone(), 'HH:mm')
-      };
-    }
+    document.getElementById('iniciar').onclick = async () => {
+      const resultado = document.getElementById('resultado');
+      resultado.textContent = 'Solicitando acceso a la cámara…';
 
-    const ahora = new Date();
-    hoja.getRange(fila, 9).setValue(ahora);
+      try {
+        if (!window.isSecureContext) {
+          throw new Error('La página debe abrirse mediante HTTPS.');
+        }
 
-    return {
-      estado: 'ok',
-      mensaje: '¡Ingreso autorizado!',
-      nombre: asistente[1] + ' ' + asistente[2],
-      hora: Utilities.formatDate(ahora, Session.getScriptTimeZone(), 'HH:mm')
+        if (!lector) lector = new Html5Qrcode('lector');
+
+        const camaras = await Html5Qrcode.getCameras();
+        if (!camaras.length) throw new Error('No se encontraron cámaras.');
+
+        const trasera = camaras.find(c =>
+          /back|rear|environment|trasera|posterior/i.test(c.label)
+        ) || camaras[camaras.length - 1];
+
+        await lector.start(
+          trasera.id,
+          { fps: 10, qrbox: { width: 230, height: 230 } },
+          texto => {
+            resultado.textContent = 'QR leído: ' + texto;
+          },
+          () => {}
+        );
+
+        activo = true;
+        resultado.textContent = 'Cámara activa. Apuntá al código QR.';
+      } catch (e) {
+        resultado.textContent = 'No se pudo abrir la cámara: ' + e.message;
+      }
     };
-  } finally {
-    lock.releaseLock();
-  }
-}
 
-function listarAsistentes() {
-  const hoja = obtenerHoja();
-  const ultimaFila = hoja.getLastRow();
-  if (ultimaFila < 2) return [];
-
-  return hoja.getRange(2, 1, ultimaFila - 1, 9)
-    .getValues()
-    .map(f => ({
-      codigo: String(f[0]),
-      nombre: String(f[1]),
-      apellido: String(f[2]),
-      documento: String(f[4]),
-      ingreso: f[8]
-        ? Utilities.formatDate(new Date(f[8]), Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm')
-        : ''
-    }));
-}
-
+    document.getElementById('detener').onclick = async () => {
+      try {
+        if (lector && activo) await lector.stop();
+        if (lector) lector.clear();
+        activo = false;
+        resultado.textContent = 'Cámara detenida.';
+      } catch (e) {
+        document.getElementById('resultado').textContent =
+          'Error al detener la cámara: ' + e.message;
+      }
+    };
+  </script>
+</body>
+</html>
