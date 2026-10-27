@@ -4,127 +4,445 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f2ef">
   <title>Control de entradas</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <script src="https://unpkg.com/html5-qrcode"></script>
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 520px;
-      margin: 25px auto;
-      padding: 16px;
-      text-align: center;
-      background: #f7f7f7;
-      color: #222;
+    :root {
+      --fondo: #f8f3f0;
+      --tarjeta: #fffdfb;
+      --rosa: #c58f95;
+      --rosa-claro: #f2e2e1;
+      --bordo: #795459;
+      --texto: #493d3e;
+      --secundario: #8b7b7b;
+      --borde: #eaded9;
+      --verde: #e2f0e5;
+      --verde-texto: #315c40;
+      --rojo: #f9e5e3;
+      --rojo-texto: #963f42;
+      --amarillo: #fbf0d8;
+      --amarillo-texto: #795b22;
+      --sombra: 0 8px 28px rgba(99, 65, 65, 0.07);
     }
 
-    h1 { font-size: 27px; }
-
-    button, input {
-      width: 100%;
+    * {
       box-sizing: border-box;
-      padding: 13px;
-      margin: 7px 0;
-      font-size: 16px;
-      border-radius: 8px;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      max-width: 540px;
+      margin: 0 auto;
+      padding: 24px 16px 35px;
+      background: var(--fondo);
+      color: var(--texto);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .encabezado {
+      text-align: center;
+      padding: 15px 8px 24px;
+    }
+
+    .detalle-superior {
+      display: inline-block;
+      padding: 5px 13px;
+      margin-bottom: 12px;
+      border-radius: 30px;
+      background: var(--rosa-claro);
+      color: var(--bordo);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--bordo);
+      font-size: clamp(25px, 6vw, 31px);
+      font-weight: 700;
+      letter-spacing: -1px;
+      line-height: 1.3;
+    }
+
+    .subtitulo {
+      max-width: 340px;
+      margin: 10px auto 0;
+      color: var(--secundario);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .tarjeta {
+      margin-bottom: 17px;
+      padding: 20px;
+      background: var(--tarjeta);
+      border: 1px solid rgba(234, 222, 217, 0.8);
+      border-radius: 20px;
+      box-shadow: var(--sombra);
+    }
+
+    .titulo-seccion {
+      margin: 0 0 5px;
+      color: var(--bordo);
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .descripcion {
+      margin: 0 0 15px;
+      color: var(--secundario);
+      font-size: 12px;
+    }
+
+    button,
+    input {
+      width: 100%;
+      min-height: 48px;
+      margin: 6px 0;
+      padding: 13px 15px;
+      border-radius: 12px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
     }
 
     button {
-      border: 0;
-      background: #333;
-      color: white;
+      border: 1px solid transparent;
+      background: var(--rosa);
+      color: #fff;
       cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
     }
 
-    input { border: 1px solid #bbb; }
+    button:hover {
+      background: #b67f86;
+    }
+
+    button:active {
+      transform: scale(0.99);
+    }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 3px solid rgba(197, 143, 149, 0.35);
+      outline-offset: 2px;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .boton-secundario {
+      border-color: var(--borde);
+      background: #fffaf8;
+      color: var(--bordo);
+    }
+
+    .boton-secundario:hover {
+      background: var(--rosa-claro);
+    }
 
     #lector {
       width: 100%;
-      margin-top: 15px;
+      margin: 15px 0 5px;
+      overflow: hidden;
+      border-radius: 14px;
+    }
+
+    #lector:empty {
+      display: none;
+    }
+
+    #lector video {
+      border-radius: 12px;
+    }
+
+    #lector button {
+      width: auto;
+      min-height: 38px;
+    }
+
+    #lector select {
+      max-width: 100%;
+      padding: 8px;
+      font-family: 'Montserrat', sans-serif;
     }
 
     #resultado {
-      margin: 18px 0;
-      padding: 18px 10px;
-      border-radius: 10px;
-      background: white;
+      margin: 14px 0 0;
+      padding: 16px;
+      border: 1px solid var(--borde);
+      border-radius: 14px;
+      background: #faf5f2;
+      color: var(--bordo);
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.9;
       overflow-wrap: anywhere;
       white-space: pre-line;
     }
 
-    .ok { background: #d8f3dc !important; }
-    .error { background: #ffe0e0 !important; }
-    .aviso { background: #fff0c2 !important; }
-    .pequeno { font-size: 13px; color: #555; }
+    #resultado:empty {
+      display: none;
+    }
 
-    #panel-ingresos {
-      margin-top: 25px;
-      padding: 15px;
-      background: white;
-      border-radius: 10px;
+    .ok {
+      background: var(--verde) !important;
+      border-color: #c9e1cf !important;
+      color: var(--verde-texto) !important;
+    }
+
+    .error {
+      background: var(--rojo) !important;
+      border-color: #edcfcb !important;
+      color: var(--rojo-texto) !important;
+    }
+
+    .aviso {
+      background: var(--amarillo) !important;
+      border-color: #efdfb7 !important;
+      color: var(--amarillo-texto) !important;
+    }
+
+    .etiqueta {
+      display: block;
+      margin: 15px 0 5px;
+      color: var(--bordo);
+      font-size: 12px;
+      font-weight: 600;
       text-align: left;
     }
 
-    #panel-ingresos h2 {
-      font-size: 21px;
+    input {
+      border: 1px solid var(--borde);
+      background: #fff;
+      color: var(--texto);
+      font-weight: 400;
+      outline: none;
+    }
+
+    input::placeholder {
+      color: #b2a4a2;
+    }
+
+    input:focus {
+      border-color: var(--rosa);
+    }
+
+    #panel-ingresos {
+      margin-top: 22px;
+    }
+
+    .encabezado-ingresos {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .encabezado-ingresos .titulo-seccion {
+      margin-bottom: 3px;
+    }
+
+    .subtitulo-ingresos {
+      margin: 0;
+      color: var(--secundario);
+      font-size: 11px;
+    }
+
+    #contador-ingresos {
+      flex-shrink: 0;
+      display: inline-block;
+      min-width: 34px;
+      padding: 5px 9px;
+      border-radius: 20px;
+      background: var(--rosa-claro);
+      color: var(--bordo);
+      font-size: 12px;
+      font-weight: 700;
       text-align: center;
+    }
+
+    #estado-ingresos {
+      margin: 8px 0 12px;
+      color: var(--secundario);
+      font-size: 10px;
+      line-height: 1.7;
+    }
+
+    #actualizar-ingresos {
+      min-height: 40px;
+      margin: 0 0 12px;
+      padding: 9px 12px;
+      font-size: 11px;
     }
 
     #lista-ingresos {
       max-height: 350px;
       overflow-y: auto;
+      overscroll-behavior: contain;
     }
 
     .ingreso {
-      padding: 12px 5px;
-      border-bottom: 1px solid #ddd;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 3px;
+      border-bottom: 1px solid #f0e7e3;
+    }
+
+    .ingreso:last-child {
+      border-bottom: 0;
+    }
+
+    .icono-ingreso {
+      display: flex;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      width: 37px;
+      height: 37px;
+      border-radius: 12px;
+      background: #f4e8e5;
+      color: var(--bordo);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .datos-ingreso {
+      min-width: 0;
+      flex: 1;
     }
 
     .ingreso strong {
       display: block;
-      font-size: 15px;
+      color: var(--texto);
+      font-size: 12px;
+      font-weight: 600;
+      overflow-wrap: anywhere;
     }
 
-    .ingreso small { color: #555; }
+    .ingreso small {
+      display: block;
+      margin-top: 3px;
+      color: var(--secundario);
+      font-size: 10px;
+    }
+
+    .vacio {
+      padding: 20px 8px;
+      color: var(--secundario);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .pie {
+      padding: 14px 10px 0;
+      color: var(--secundario);
+      font-size: 10px;
+      text-align: center;
+    }
+
+    @media (max-width: 380px) {
+      body {
+        padding: 15px 11px 25px;
+      }
+
+      .tarjeta {
+        padding: 15px;
+        border-radius: 16px;
+      }
+
+      .encabezado-ingresos {
+        gap: 5px;
+      }
+    }
   </style>
 </head>
 
 <body>
-  <h1>Control de entradas</h1>
-  <p>Escaneá el QR o ingresá el código manualmente.</p>
-
-  <button id="iniciar">Abrir cámara</button>
-  <button id="detener">Detener cámara</button>
-
-  <div id="lector"></div>
-
-  <div id="resultado" role="status">
-    Esperando una entrada…
-  </div>
-
-  <input id="codigo" type="text"
-         placeholder="Ej.: T-ABC123456">
-  <button id="validar">Validar ingreso</button>
-
-  <section id="panel-ingresos">
-    <h2>Ingresos registrados</h2>
-
-    <p id="estado-ingresos" class="pequeno">
-      Preparando consulta...
+  <header class="encabezado">
+    <span class="detalle-superior">Control de acceso</span>
+    <h1>Control de entradas</h1>
+    <p class="subtitulo">
+      Escaneá el código QR o ingresá el código manualmente
+      para validar cada entrada.
     </p>
+  </header>
 
-    <button id="actualizar-ingresos">
-      Actualizar ingresos
-    </button>
+  <main>
+    <section class="tarjeta">
+      <h2 class="titulo-seccion">Validación de entradas</h2>
+      <p class="descripcion">
+        Abrí la cámara y apuntá al código QR de la entrada.
+      </p>
 
-    <div id="lista-ingresos">
-      <p class="pequeno">Esperando datos...</p>
-    </div>
-  </section>
+      <button id="iniciar">Abrir cámara</button>
+      <button id="detener" class="boton-secundario">
+        Detener cámara
+      </button>
 
-  <p class="pequeno">
-    Cada código se puede utilizar una sola vez.
-  </p>
+      <div id="lector"></div>
+
+      <div id="resultado" role="status" aria-live="polite">
+        Esperando una entrada…
+      </div>
+
+      <label class="etiqueta" for="codigo">
+        Ingresar código manualmente
+      </label>
+      <input
+        id="codigo"
+        type="text"
+        placeholder="Ej.: T-ABC123456"
+        autocomplete="off"
+        autocapitalize="characters"
+      >
+
+      <button id="validar">Validar ingreso</button>
+    </section>
+
+    <section id="panel-ingresos" class="tarjeta">
+      <div class="encabezado-ingresos">
+        <div>
+          <h2 class="titulo-seccion">Ingresos registrados</h2>
+          <p class="subtitulo-ingresos">
+            Personas que ya ingresaron
+          </p>
+        </div>
+        <span id="contador-ingresos">—</span>
+      </div>
+
+      <p id="estado-ingresos" aria-live="polite">
+        Preparando consulta...
+      </p>
+
+      <button id="actualizar-ingresos" class="boton-secundario">
+        Actualizar ingresos
+      </button>
+
+      <div id="lista-ingresos">
+        <p class="vacio">Esperando datos...</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pie">
+    Cada código QR se puede utilizar una sola vez.
+  </footer>
 
 <script>
   const URL_APPS_SCRIPT =
@@ -221,9 +539,8 @@
           );
 
           campoCodigo.value = '';
-
-          // Actualizar la lista luego de un ingreso confirmado.
           cargarIngresos();
+
         } else if (r.estado === 'usada') {
           mostrar(
             '⚠️ ' + r.mensaje + '\n' +
@@ -285,6 +602,7 @@
 
       activo = true;
       mostrar('Cámara activa. Apuntá al código QR.');
+
     } catch (error) {
       mostrar(
         'No se pudo iniciar la cámara: ' + error.message,
@@ -300,6 +618,7 @@
 
       activo = false;
       mostrar('Cámara detenida.');
+
     } catch (error) {
       mostrar(
         'Error al detener la cámara: ' + error.message,
@@ -314,6 +633,7 @@
 
     const estado = document.getElementById('estado-ingresos');
     const lista = document.getElementById('lista-ingresos');
+    const contador = document.getElementById('contador-ingresos');
 
     consultarAppsScript(
       { action: 'listarIngresos' },
@@ -330,15 +650,16 @@
 
         const ingresos = respuesta.ingresos;
 
+        contador.textContent = ingresos.length;
+
         estado.textContent =
-          'Total de ingresos: ' + ingresos.length +
-          ' · Actualización cada 5 segundos';
+          'Actualización automática cada 5 segundos';
 
         lista.replaceChildren();
 
         if (ingresos.length === 0) {
           const p = document.createElement('p');
-          p.className = 'pequeno';
+          p.className = 'vacio';
           p.textContent = 'Todavía no hay ingresos registrados.';
           lista.appendChild(p);
           return;
@@ -348,6 +669,14 @@
           const fila = document.createElement('div');
           fila.className = 'ingreso';
 
+          const icono = document.createElement('div');
+          icono.className = 'icono-ingreso';
+          icono.textContent = '✓';
+          icono.setAttribute('aria-hidden', 'true');
+
+          const datos = document.createElement('div');
+          datos.className = 'datos-ingreso';
+
           const nombre = document.createElement('strong');
           nombre.textContent =
             ingreso.nombre || 'Nombre no disponible';
@@ -356,8 +685,11 @@
           hora.textContent =
             'Hora de ingreso: ' + (ingreso.hora || 'No disponible');
 
-          fila.appendChild(nombre);
-          fila.appendChild(hora);
+          datos.appendChild(nombre);
+          datos.appendChild(hora);
+
+          fila.appendChild(icono);
+          fila.appendChild(datos);
           lista.appendChild(fila);
         });
       },
