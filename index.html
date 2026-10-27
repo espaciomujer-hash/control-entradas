@@ -6,414 +6,86 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f8f2ef">
   <title>Control de entradas</title>
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-
   <script src="https://unpkg.com/html5-qrcode"></script>
-
   <style>
     :root {
-      --fondo: #f8f3f0;
-      --tarjeta: #fffdfb;
-      --rosa: #c58f95;
-      --rosa-claro: #f2e2e1;
-      --bordo: #795459;
-      --texto: #493d3e;
-      --secundario: #8b7b7b;
-      --borde: #eaded9;
-      --verde: #e2f0e5;
-      --verde-texto: #315c40;
-      --rojo: #f9e5e3;
-      --rojo-texto: #963f42;
-      --amarillo: #fbf0d8;
-      --amarillo-texto: #795b22;
-      --sombra: 0 8px 28px rgba(99, 65, 65, 0.07);
+      --fondo:#f8f3f0;--tarjeta:#fffdfb;--rosa:#c58f95;
+      --rosa-claro:#f2e2e1;--bordo:#795459;--texto:#493d3e;
+      --secundario:#8b7b7b;--borde:#eaded9;--verde:#e2f0e5;
+      --verde-texto:#315c40;--rojo:#f9e5e3;--rojo-texto:#963f42;
+      --amarillo:#fbf0d8;--amarillo-texto:#795b22;
+      --sombra:0 8px 28px rgba(99,65,65,.07);
     }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Montserrat', sans-serif;
-      max-width: 540px;
-      margin: 0 auto;
-      padding: 24px 16px 35px;
-      background: var(--fondo);
-      color: var(--texto);
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    .encabezado {
-      text-align: center;
-      padding: 15px 8px 24px;
-    }
-
-    .detalle-superior {
-      display: inline-block;
-      padding: 5px 13px;
-      margin-bottom: 12px;
-      border-radius: 30px;
-      background: var(--rosa-claro);
-      color: var(--bordo);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-    }
-
-    h1 {
-      margin: 0;
-      color: var(--bordo);
-      font-size: clamp(25px, 6vw, 31px);
-      font-weight: 700;
-      letter-spacing: -1px;
-      line-height: 1.3;
-    }
-
-    .subtitulo {
-      max-width: 340px;
-      margin: 10px auto 0;
-      color: var(--secundario);
-      font-size: 13px;
-      line-height: 1.8;
-    }
-
-    .tarjeta {
-      margin-bottom: 17px;
-      padding: 20px;
-      background: var(--tarjeta);
-      border: 1px solid rgba(234, 222, 217, 0.8);
-      border-radius: 20px;
-      box-shadow: var(--sombra);
-    }
-
-    .titulo-seccion {
-      margin: 0 0 5px;
-      color: var(--bordo);
-      font-size: 17px;
-      font-weight: 700;
-    }
-
-    .descripcion {
-      margin: 0 0 15px;
-      color: var(--secundario);
-      font-size: 12px;
-    }
-
-    button,
-    input {
-      width: 100%;
-      min-height: 48px;
-      margin: 6px 0;
-      padding: 13px 15px;
-      border-radius: 12px;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    button {
-      border: 1px solid transparent;
-      background: var(--rosa);
-      color: #fff;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.15s;
-    }
-
-    button:hover {
-      background: #b67f86;
-    }
-
-    button:active {
-      transform: scale(0.99);
-    }
-
-    button:focus-visible,
-    input:focus-visible {
-      outline: 3px solid rgba(197, 143, 149, 0.35);
-      outline-offset: 2px;
-    }
-
-    button:disabled {
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
-
-    .boton-secundario {
-      border-color: var(--borde);
-      background: #fffaf8;
-      color: var(--bordo);
-    }
-
-    .boton-secundario:hover {
-      background: var(--rosa-claro);
-    }
-
-    #lector {
-      width: 100%;
-      min-height: 1px;
-      margin: 15px 0 5px;
-      overflow: hidden;
-      border-radius: 14px;
-    }
-
-    /* Mantener el contenedor disponible para iniciar la cámara. */
-    #lector:empty {
-      min-height: 1px;
-    }
-
-    #lector video {
-      border-radius: 12px;
-    }
-
-    #lector button {
-      width: auto;
-      min-height: 38px;
-    }
-
-    #lector select {
-      max-width: 100%;
-      padding: 8px;
-      font-family: 'Montserrat', sans-serif;
-    }
-
-    #resultado {
-      margin: 14px 0 0;
-      padding: 16px;
-      border: 1px solid var(--borde);
-      border-radius: 14px;
-      background: #faf5f2;
-      color: var(--bordo);
-      text-align: center;
-      font-size: 13px;
-      font-weight: 600;
-      line-height: 1.9;
-      overflow-wrap: anywhere;
-      white-space: pre-line;
-    }
-
-    #resultado:empty {
-      display: none;
-    }
-
-    .ok {
-      background: var(--verde) !important;
-      border-color: #c9e1cf !important;
-      color: var(--verde-texto) !important;
-    }
-
-    .error {
-      background: var(--rojo) !important;
-      border-color: #edcfcb !important;
-      color: var(--rojo-texto) !important;
-    }
-
-    .aviso {
-      background: var(--amarillo) !important;
-      border-color: #efdfb7 !important;
-      color: var(--amarillo-texto) !important;
-    }
-
-    .etiqueta {
-      display: block;
-      margin: 15px 0 5px;
-      color: var(--bordo);
-      font-size: 12px;
-      font-weight: 600;
-      text-align: left;
-    }
-
-    input {
-      border: 1px solid var(--borde);
-      background: #fff;
-      color: var(--texto);
-      font-weight: 400;
-      outline: none;
-    }
-
-    input::placeholder {
-      color: #b2a4a2;
-    }
-
-    input:focus {
-      border-color: var(--rosa);
-    }
-
-    #panel-ingresos {
-      margin-top: 22px;
-    }
-
-    .encabezado-ingresos {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .encabezado-ingresos .titulo-seccion {
-      margin-bottom: 3px;
-    }
-
-    .subtitulo-ingresos {
-      margin: 0;
-      color: var(--secundario);
-      font-size: 11px;
-    }
-
-    #contador-ingresos {
-      flex-shrink: 0;
-      display: inline-block;
-      min-width: 34px;
-      padding: 5px 9px;
-      border-radius: 20px;
-      background: var(--rosa-claro);
-      color: var(--bordo);
-      font-size: 12px;
-      font-weight: 700;
-      text-align: center;
-    }
-
-    #estado-ingresos {
-      margin: 8px 0 12px;
-      color: var(--secundario);
-      font-size: 10px;
-      line-height: 1.7;
-    }
-
-    #actualizar-ingresos {
-      min-height: 40px;
-      margin: 0 0 12px;
-      padding: 9px 12px;
-      font-size: 11px;
-    }
-
-    #lista-ingresos {
-      max-height: 350px;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-    }
-
-    .ingreso {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 13px 3px;
-      border-bottom: 1px solid #f0e7e3;
-    }
-
-    .ingreso:last-child {
-      border-bottom: 0;
-    }
-
-    .icono-ingreso {
-      display: flex;
-      flex-shrink: 0;
-      align-items: center;
-      justify-content: center;
-      width: 37px;
-      height: 37px;
-      border-radius: 12px;
-      background: #f4e8e5;
-      color: var(--bordo);
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    .datos-ingreso {
-      min-width: 0;
-      flex: 1;
-    }
-
-    .ingreso strong {
-      display: block;
-      color: var(--texto);
-      font-size: 12px;
-      font-weight: 600;
-      overflow-wrap: anywhere;
-    }
-
-    .ingreso small {
-      display: block;
-      margin-top: 3px;
-      color: var(--secundario);
-      font-size: 10px;
-    }
-
-    .vacio {
-      padding: 20px 8px;
-      color: var(--secundario);
-      font-size: 12px;
-      text-align: center;
-    }
-
-    .pie {
-      padding: 14px 10px 0;
-      color: var(--secundario);
-      font-size: 10px;
-      text-align: center;
-    }
-
-    @media (max-width: 380px) {
-      body {
-        padding: 15px 11px 25px;
-      }
-
-      .tarjeta {
-        padding: 15px;
-        border-radius: 16px;
-      }
-
-      .encabezado-ingresos {
-        gap: 5px;
-      }
-    }
+    *{box-sizing:border-box}
+    body{font-family:'Montserrat',sans-serif;max-width:540px;margin:0 auto;padding:24px 16px 35px;background:var(--fondo);color:var(--texto);line-height:1.6;-webkit-font-smoothing:antialiased}
+    .encabezado{text-align:center;padding:15px 8px 24px}
+    .detalle-superior{display:inline-block;padding:5px 13px;margin-bottom:12px;border-radius:30px;background:var(--rosa-claro);color:var(--bordo);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+    h1{margin:0;color:var(--bordo);font-size:clamp(25px,6vw,31px);font-weight:700;letter-spacing:-1px;line-height:1.3}
+    .subtitulo{max-width:340px;margin:10px auto 0;color:var(--secundario);font-size:13px;line-height:1.8}
+    .tarjeta{margin-bottom:17px;padding:20px;background:var(--tarjeta);border:1px solid rgba(234,222,217,.8);border-radius:20px;box-shadow:var(--sombra)}
+    .titulo-seccion{margin:0 0 5px;color:var(--bordo);font-size:17px;font-weight:700}
+    .descripcion{margin:0 0 15px;color:var(--secundario);font-size:12px}
+    button,input{width:100%;min-height:48px;margin:6px 0;padding:13px 15px;border-radius:12px;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600}
+    button{border:1px solid transparent;background:var(--rosa);color:#fff;cursor:pointer;transition:background .2s,transform .15s}
+    button:hover{background:#b67f86}
+    button:active{transform:scale(.99)}
+    button:focus-visible,input:focus-visible{outline:3px solid rgba(197,143,149,.35);outline-offset:2px}
+    button:disabled{cursor:not-allowed;opacity:.6}
+    .boton-secundario{border-color:var(--borde);background:#fffaf8;color:var(--bordo)}
+    .boton-secundario:hover{background:var(--rosa-claro)}
+    #lector{width:100%;min-height:1px;margin:15px 0 5px;overflow:hidden;border-radius:14px}
+    #lector:empty{min-height:1px}
+    #lector video{width:100%;border-radius:12px}
+    #lector button{width:auto;min-height:38px}
+    #lector select{max-width:100%;padding:8px;font-family:'Montserrat',sans-serif}
+    #resultado{margin:14px 0 0;padding:16px;border:1px solid var(--borde);border-radius:14px;background:#faf5f2;color:var(--bordo);text-align:center;font-size:13px;font-weight:600;line-height:1.9;overflow-wrap:anywhere;white-space:pre-line}
+    #resultado:empty{display:none}
+    .ok{background:var(--verde)!important;border-color:#c9e1cf!important;color:var(--verde-texto)!important}
+    .error{background:var(--rojo)!important;border-color:#edcfcb!important;color:var(--rojo-texto)!important}
+    .aviso{background:var(--amarillo)!important;border-color:#efdfb7!important;color:var(--amarillo-texto)!important}
+    .etiqueta{display:block;margin:15px 0 5px;color:var(--bordo);font-size:12px;font-weight:600;text-align:left}
+    input{border:1px solid var(--borde);background:#fff;color:var(--texto);font-weight:400;outline:none}
+    input::placeholder{color:#b2a4a2}
+    input:focus{border-color:var(--rosa)}
+    #panel-ingresos{margin-top:22px}
+    .encabezado-ingresos{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+    .encabezado-ingresos .titulo-seccion{margin-bottom:3px}
+    .subtitulo-ingresos{margin:0;color:var(--secundario);font-size:11px}
+    #contador-ingresos{flex-shrink:0;display:inline-block;min-width:34px;padding:5px 9px;border-radius:20px;background:var(--rosa-claro);color:var(--bordo);font-size:12px;font-weight:700;text-align:center}
+    #estado-ingresos{margin:8px 0 12px;color:var(--secundario);font-size:10px;line-height:1.7}
+    #actualizar-ingresos{min-height:40px;margin:0 0 12px;padding:9px 12px;font-size:11px}
+    #lista-ingresos{max-height:350px;overflow-y:auto;overscroll-behavior:contain}
+    .ingreso{display:flex;align-items:center;gap:12px;padding:13px 3px;border-bottom:1px solid #f0e7e3}
+    .ingreso:last-child{border-bottom:0}
+    .icono-ingreso{display:flex;flex-shrink:0;align-items:center;justify-content:center;width:37px;height:37px;border-radius:12px;background:#f4e8e5;color:var(--bordo);font-size:14px;font-weight:700}
+    .datos-ingreso{min-width:0;flex:1}
+    .ingreso strong{display:block;color:var(--texto);font-size:12px;font-weight:600;overflow-wrap:anywhere}
+    .ingreso small{display:block;margin-top:3px;color:var(--secundario);font-size:10px}
+    .vacio{padding:20px 8px;color:var(--secundario);font-size:12px;text-align:center}
+    .pie{padding:14px 10px 0;color:var(--secundario);font-size:10px;text-align:center}
+    @media(max-width:380px){body{padding:15px 11px 25px}.tarjeta{padding:15px;border-radius:16px}.encabezado-ingresos{gap:5px}}
   </style>
 </head>
-
 <body>
   <header class="encabezado">
     <span class="detalle-superior">Control de acceso</span>
     <h1>Control de entradas</h1>
-    <p class="subtitulo">
-      Escaneá el código QR o ingresá el código manualmente
-      para validar cada entrada.
-    </p>
+    <p class="subtitulo">Escaneá el código QR o ingresá el código manualmente para validar cada entrada.</p>
   </header>
 
   <main>
     <section class="tarjeta">
       <h2 class="titulo-seccion">Validación de entradas</h2>
-      <p class="descripcion">
-        Abrí la cámara y apuntá al código QR de la entrada.
-      </p>
-
+      <p class="descripcion">Abrí la cámara y apuntá al código QR de la entrada.</p>
       <button id="iniciar">Abrir cámara</button>
-      <button id="detener" class="boton-secundario">
-        Detener cámara
-      </button>
-
+      <button id="detener" class="boton-secundario">Detener cámara</button>
       <div id="lector"></div>
-
-      <div id="resultado" role="status" aria-live="polite">
-        Esperando una entrada…
-      </div>
-
-      <label class="etiqueta" for="codigo">
-        Ingresar código manualmente
-      </label>
-      <input
-        id="codigo"
-        type="text"
-        placeholder="Ej.: T-ABC123456"
-        autocomplete="off"
-        autocapitalize="characters"
-      >
-
+      <div id="resultado" role="status" aria-live="polite">Esperando una entrada…</div>
+      <label class="etiqueta" for="codigo">Ingresar código manualmente</label>
+      <input id="codigo" type="text" placeholder="Ej.: T-ABC123456" autocomplete="off" autocapitalize="characters">
       <button id="validar">Validar ingreso</button>
     </section>
 
@@ -421,34 +93,20 @@
       <div class="encabezado-ingresos">
         <div>
           <h2 class="titulo-seccion">Ingresos registrados</h2>
-          <p class="subtitulo-ingresos">
-            Personas que ya ingresaron
-          </p>
+          <p class="subtitulo-ingresos">Personas que ya ingresaron</p>
         </div>
         <span id="contador-ingresos">—</span>
       </div>
-
-      <p id="estado-ingresos" aria-live="polite">
-        Preparando consulta...
-      </p>
-
-      <button id="actualizar-ingresos" class="boton-secundario">
-        Actualizar ingresos
-      </button>
-
-      <div id="lista-ingresos">
-        <p class="vacio">Esperando datos...</p>
-      </div>
+      <p id="estado-ingresos" aria-live="polite">Preparando consulta...</p>
+      <button id="actualizar-ingresos" class="boton-secundario">Actualizar ingresos</button>
+      <div id="lista-ingresos"><p class="vacio">Esperando datos...</p></div>
     </section>
   </main>
 
-  <footer class="pie">
-    Cada código QR se puede utilizar una sola vez.
-  </footer>
+  <footer class="pie">Cada código QR se puede utilizar una sola vez.</footer>
 
 <script>
-  const URL_APPS_SCRIPT =
-    'https://script.google.com/macros/s/AKfycbwyISX3l7CsMUqn7aTFlFteR5W0ohdMEjubfZgsF4UrM5RwLFctsv2SYFcjdxTsHfdg/exec';
+  const URL_APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbwyISX3l7CsMUqn7aTFlFteR5W0ohdMEjubfZgsF4UrM5RwLFctsv2SYFcjdxTsHfdg/exec';
 
   let lector = null;
   let activo = false;
@@ -464,9 +122,7 @@
   }
 
   function consultarAppsScript(parametros, alResponder, alError) {
-    const callback = 'respuesta_' + Date.now() + '_' +
-      Math.floor(Math.random() * 100000);
-
+    const callback = 'respuesta_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
     const script = document.createElement('script');
     let terminado = false;
     let limite;
@@ -495,10 +151,7 @@
     };
 
     parametros.callback = callback;
-
-    script.src = URL_APPS_SCRIPT + '?' +
-      new URLSearchParams(parametros).toString();
-
+    script.src = URL_APPS_SCRIPT + '?' + new URLSearchParams(parametros).toString();
     document.body.appendChild(script);
   }
 
@@ -511,53 +164,31 @@
     }
 
     if (procesando) return;
-
     procesando = true;
     mostrar('Validando entrada…');
 
     consultarAppsScript(
       { action: 'validar', codigo: codigo },
-
       respuesta => {
         procesando = false;
 
         if (!respuesta || !respuesta.ok) {
-          mostrar(
-            'Error: ' +
-            (respuesta?.error || 'No se pudo validar la entrada.'),
-            'error'
-          );
+          mostrar('Error: ' + (respuesta?.error || 'No se pudo validar la entrada.'), 'error');
           return;
         }
 
         const r = respuesta.resultado || {};
 
         if (r.estado === 'ok') {
-          mostrar(
-            '✅ ' + r.mensaje + '\n' +
-            (r.nombre || '') + '\nHora: ' +
-            (r.hora || ''),
-            'ok'
-          );
-
+          mostrar('✅ ' + r.mensaje + '\n' + (r.nombre || '') + '\nHora: ' + (r.hora || ''), 'ok');
           campoCodigo.value = '';
           cargarIngresos();
-
         } else if (r.estado === 'usada') {
-          mostrar(
-            '⚠️ ' + r.mensaje + '\n' +
-            (r.nombre || '') + '\nPrimer ingreso: ' +
-            (r.hora || ''),
-            'aviso'
-          );
+          mostrar('⚠️ ' + r.mensaje + '\n' + (r.nombre || '') + '\nPrimer ingreso: ' + (r.hora || ''), 'aviso');
         } else {
-          mostrar(
-            '❌ ' + (r.mensaje || 'Entrada no válida.'),
-            'error'
-          );
+          mostrar('❌ ' + (r.mensaje || 'Entrada no válida.'), 'error');
         }
       },
-
       error => {
         procesando = false;
         mostrar(error, 'error');
@@ -565,76 +196,94 @@
     );
   }
 
-  document.getElementById('validar').addEventListener('click', () => {
-    validarCodigo(campoCodigo.value);
-  });
+  document.getElementById('validar').addEventListener('click', () => validarCodigo(campoCodigo.value));
 
   campoCodigo.addEventListener('keydown', evento => {
-    if (evento.key === 'Enter') {
-      validarCodigo(campoCodigo.value);
-    }
+    if (evento.key === 'Enter') validarCodigo(campoCodigo.value);
   });
 
   document.getElementById('iniciar').addEventListener('click', async () => {
+    const boton = document.getElementById('iniciar');
+
     try {
-      if (!lector) {
-        lector = new Html5Qrcode('lector');
+      boton.disabled = true;
+
+      if (lector && activo) {
+        await lector.stop();
+        activo = false;
       }
 
+      if (lector) {
+        try { lector.clear(); } catch (e) {}
+      }
+
+      lector = new Html5Qrcode('lector');
       mostrar('Solicitando acceso a la cámara…');
 
       const camaras = await Html5Qrcode.getCameras();
 
-      if (!camaras.length) {
-        throw new Error('No se encontraron cámaras.');
+      if (!camaras || camaras.length === 0) {
+        throw new Error('No se encontraron cámaras disponibles.');
       }
 
       const trasera = camaras.find(c =>
         /back|rear|environment|trasera|posterior/i.test(c.label)
-      ) || camaras[camaras.length - 1];
-
-      await lector.start(
-        trasera.id,
-        { fps: 10, qrbox: { width: 230, height: 230 } },
-        texto => {
-          if (procesando) return;
-          campoCodigo.value = texto.trim();
-          validarCodigo(texto);
-        },
-        () => {}
       );
 
-      activo = true;
-      mostrar('Cámara activa. Apuntá al código QR.');
+      const opciones = [
+        ...(trasera ? [trasera] : []),
+        ...camaras.filter(c => !trasera || c.id !== trasera.id)
+      ];
 
+      let iniciada = false;
+      let ultimoError = null;
+
+      for (const camara of opciones) {
+        try {
+          await lector.start(
+            camara.id,
+            { fps: 10, qrbox: { width: 230, height: 230 } },
+            texto => {
+              if (procesando) return;
+              campoCodigo.value = texto.trim();
+              validarCodigo(texto);
+            },
+            () => {}
+          );
+
+          iniciada = true;
+          activo = true;
+          mostrar('Cámara activa. Apuntá al código QR.');
+          break;
+        } catch (error) {
+          ultimoError = error;
+
+          try { await lector.stop(); } catch (e) {}
+          try { lector.clear(); } catch (e) {}
+
+          lector = new Html5Qrcode('lector');
+        }
+      }
+
+      if (!iniciada) {
+        throw ultimoError || new Error('No se pudo activar ninguna cámara.');
+      }
     } catch (error) {
-      mostrar(
-        'No se pudo iniciar la cámara: ' +
-        (error.message || error),
-        'error'
-      );
+      activo = false;
+      mostrar('No se pudo iniciar la cámara: ' + (error.message || error), 'error');
+    } finally {
+      boton.disabled = false;
     }
   });
 
   document.getElementById('detener').addEventListener('click', async () => {
     try {
-      if (lector && activo) {
-        await lector.stop();
-      }
-
-      if (lector) {
-        lector.clear();
-      }
-
+      if (lector && activo) await lector.stop();
+      if (lector) lector.clear();
       activo = false;
       mostrar('Cámara detenida.');
-
     } catch (error) {
-      mostrar(
-        'Error al detener la cámara: ' +
-        (error.message || error),
-        'error'
-      );
+      mostrar('Error al detener la cámara: ' + (error.message || error), 'error');
     }
   });
 
@@ -648,24 +297,17 @@
 
     consultarAppsScript(
       { action: 'listarIngresos' },
-
       respuesta => {
         consultandoIngresos = false;
 
-        if (!respuesta || !respuesta.ok ||
-            !Array.isArray(respuesta.ingresos)) {
-          estado.textContent =
-            'No se pudo obtener la lista. Verificá Google Apps Script.';
+        if (!respuesta || !respuesta.ok || !Array.isArray(respuesta.ingresos)) {
+          estado.textContent = 'No se pudo obtener la lista. Verificá Google Apps Script.';
           return;
         }
 
         const ingresos = respuesta.ingresos;
-
         contador.textContent = ingresos.length;
-
-        estado.textContent =
-          'Actualización automática cada 5 segundos';
-
+        estado.textContent = 'Actualización automática cada 5 segundos';
         lista.replaceChildren();
 
         if (ingresos.length === 0) {
@@ -689,22 +331,18 @@
           datos.className = 'datos-ingreso';
 
           const nombre = document.createElement('strong');
-          nombre.textContent =
-            ingreso.nombre || 'Nombre no disponible';
+          nombre.textContent = ingreso.nombre || 'Nombre no disponible';
 
           const hora = document.createElement('small');
-          hora.textContent =
-            'Hora de ingreso: ' + (ingreso.hora || 'No disponible');
+          hora.textContent = 'Hora de ingreso: ' + (ingreso.hora || 'No disponible');
 
           datos.appendChild(nombre);
           datos.appendChild(hora);
-
           fila.appendChild(icono);
           fila.appendChild(datos);
           lista.appendChild(fila);
         });
       },
-
       error => {
         consultandoIngresos = false;
         estado.textContent = error;
@@ -712,9 +350,7 @@
     );
   }
 
-  document.getElementById('actualizar-ingresos')
-    .addEventListener('click', cargarIngresos);
-
+  document.getElementById('actualizar-ingresos').addEventListener('click', cargarIngresos);
   cargarIngresos();
   setInterval(cargarIngresos, 5000);
 </script>
