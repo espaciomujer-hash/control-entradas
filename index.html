@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Control de entradas</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -16,7 +17,9 @@
       background: #f7f7f7;
       color: #222;
     }
+
     h1 { font-size: 27px; }
+
     button, input {
       width: 100%;
       box-sizing: border-box;
@@ -25,57 +28,67 @@
       font-size: 16px;
       border-radius: 8px;
     }
+
     button {
       border: 0;
       background: #333;
       color: white;
       cursor: pointer;
     }
+
     input { border: 1px solid #bbb; }
-    #lector { width: 100%; margin-top: 15px; }
+
+    #lector {
+      width: 100%;
+      margin-top: 15px;
+    }
+
     #resultado {
       margin: 18px 0;
       padding: 18px 10px;
       border-radius: 10px;
       background: white;
       overflow-wrap: anywhere;
+      white-space: pre-line;
     }
+
     .ok { background: #d8f3dc !important; }
     .error { background: #ffe0e0 !important; }
     .aviso { background: #fff0c2 !important; }
     .pequeno { font-size: 13px; color: #555; }
-  </#panel-ingresos {
-  margin-top: 25px;
-  padding: 15px;
-  background: white;
-  border-radius: 10px;
-  text-align: left;
-}
 
-#panel-ingresos h2 {
-  font-size: 21px;
-  text-align: center;
-}
+    #panel-ingresos {
+      margin-top: 25px;
+      padding: 15px;
+      background: white;
+      border-radius: 10px;
+      text-align: left;
+    }
 
-#lista-ingresos {
-  max-height: 350px;
-  overflow-y: auto;
-}
+    #panel-ingresos h2 {
+      font-size: 21px;
+      text-align: center;
+    }
 
-.ingreso {
-  padding: 12px 5px;
-  border-bottom: 1px solid #ddd;
-}
+    #lista-ingresos {
+      max-height: 350px;
+      overflow-y: auto;
+    }
 
-.ingreso strong {
-  display: block;
-  font-size: 15px;
-}
+    .ingreso {
+      padding: 12px 5px;
+      border-bottom: 1px solid #ddd;
+    }
 
-.ingreso small {
-  color: #555;
-}>
+    .ingreso strong {
+      display: block;
+      font-size: 15px;
+    }
+
+    .ingreso small { color: #555; }
+  </style>
 </head>
+
 <body>
   <h1>Control de entradas</h1>
   <p>Escaneá el QR o ingresá el código manualmente.</p>
@@ -89,24 +102,25 @@
     Esperando una entrada…
   </div>
 
-  <input id="codigo" type="text" placeholder="Ej.: T-ABC123456">
+  <input id="codigo" type="text"
+         placeholder="Ej.: T-ABC123456">
   <button id="validar">Validar ingreso</button>
 
   <section id="panel-ingresos">
-  <h2>Ingresos registrados</h2>
+    <h2>Ingresos registrados</h2>
 
-  <p id="estado-ingresos" class="pequeno">
-    Cargando ingresos...
-  </p>
+    <p id="estado-ingresos" class="pequeno">
+      Preparando consulta...
+    </p>
 
-  <button id="actualizar-ingresos">
-    Actualizar ingresos
-  </button>
+    <button id="actualizar-ingresos">
+      Actualizar ingresos
+    </button>
 
-  <div id="lista-ingresos">
-    <p class="pequeno">Esperando datos...</p>
-  </div>
-</section>
+    <div id="lista-ingresos">
+      <p class="pequeno">Esperando datos...</p>
+    </div>
+  </section>
 
   <p class="pequeno">
     Cada código se puede utilizar una sola vez.
@@ -119,6 +133,7 @@
   let lector = null;
   let activo = false;
   let procesando = false;
+  let consultandoIngresos = false;
 
   const resultado = document.getElementById('resultado');
   const campoCodigo = document.getElementById('codigo');
@@ -126,6 +141,45 @@
   function mostrar(mensaje, clase = '') {
     resultado.className = clase;
     resultado.textContent = mensaje;
+  }
+
+  function consultarAppsScript(parametros, alResponder, alError) {
+    const callback = 'respuesta_' + Date.now() + '_' +
+      Math.floor(Math.random() * 100000);
+
+    const script = document.createElement('script');
+    let terminado = false;
+    let limite;
+
+    function finalizar() {
+      if (terminado) return;
+      terminado = true;
+      delete window[callback];
+      script.remove();
+      clearTimeout(limite);
+    }
+
+    limite = setTimeout(() => {
+      finalizar();
+      alError('Se agotó el tiempo de espera. Revisá la conexión.');
+    }, 15000);
+
+    window[callback] = respuesta => {
+      finalizar();
+      alResponder(respuesta);
+    };
+
+    script.onerror = () => {
+      finalizar();
+      alError('No se pudo conectar con Google Apps Script.');
+    };
+
+    parametros.callback = callback;
+
+    script.src = URL_APPS_SCRIPT + '?' +
+      new URLSearchParams(parametros).toString();
+
+    document.body.appendChild(script);
   }
 
   function validarCodigo(codigo) {
@@ -137,73 +191,59 @@
     }
 
     if (procesando) return;
+
     procesando = true;
     mostrar('Validando entrada…');
 
-    const callback = 'respuestaQR_' + Date.now() + '_' +
-      Math.floor(Math.random() * 100000);
+    consultarAppsScript(
+      { action: 'validar', codigo: codigo },
 
-    const script = document.createElement('script');
-    let terminado = false;
+      respuesta => {
+        procesando = false;
 
-    const finalizar = () => {
-      if (terminado) return;
-      terminado = true;
-      procesando = false;
-      delete window[callback];
-      script.remove();
-      clearTimeout(limite);
-    };
+        if (!respuesta || !respuesta.ok) {
+          mostrar(
+            'Error: ' +
+            (respuesta?.error || 'No se pudo validar la entrada.'),
+            'error'
+          );
+          return;
+        }
 
-    const limite = setTimeout(() => {
-      finalizar();
-      mostrar(
-        'No se pudo confirmar el ingreso. Revisá la conexión e intentá nuevamente.',
-        'error'
-      );
-    }, 15000);
+        const r = respuesta.resultado || {};
 
-    window[callback] = respuesta => {
-      finalizar();
+        if (r.estado === 'ok') {
+          mostrar(
+            '✅ ' + r.mensaje + '\n' +
+            (r.nombre || '') + '\nHora: ' +
+            (r.hora || ''),
+            'ok'
+          );
 
-      if (!respuesta || !respuesta.ok) {
-        mostrar(
-          'Error: ' + (respuesta?.error || 'No se pudo validar la entrada.'),
-          'error'
-        );
-        return;
+          campoCodigo.value = '';
+
+          // Actualizar la lista luego de un ingreso confirmado.
+          cargarIngresos();
+        } else if (r.estado === 'usada') {
+          mostrar(
+            '⚠️ ' + r.mensaje + '\n' +
+            (r.nombre || '') + '\nPrimer ingreso: ' +
+            (r.hora || ''),
+            'aviso'
+          );
+        } else {
+          mostrar(
+            '❌ ' + (r.mensaje || 'Entrada no válida.'),
+            'error'
+          );
+        }
+      },
+
+      error => {
+        procesando = false;
+        mostrar(error, 'error');
       }
-
-      const r = respuesta.resultado || {};
-
-      if (r.estado === 'ok') {
-        mostrar('✅ ' + r.mensaje + '\n' + (r.nombre || '') +
-          '\nHora: ' + (r.hora || ''), 'ok');
-        campoCodigo.value = '';
-      } else if (r.estado === 'usada') {
-        mostrar('⚠️ ' + r.mensaje + '\n' + (r.nombre || '') +
-          '\nPrimer ingreso: ' + (r.hora || ''), 'aviso');
-      } else {
-        mostrar('❌ ' + (r.mensaje || 'Entrada no válida.'), 'error');
-      }
-    };
-
-    script.onerror = () => {
-      finalizar();
-      mostrar(
-        'No se pudo conectar con Google. Verificá el acceso de la aplicación.',
-        'error'
-      );
-    };
-
-    const parametros = new URLSearchParams({
-      action: 'validar',
-      codigo: codigo,
-      callback: callback
-    });
-
-    script.src = URL_APPS_SCRIPT + '?' + parametros.toString();
-    document.body.appendChild(script);
+    );
   }
 
   document.getElementById('validar').addEventListener('click', () => {
@@ -211,7 +251,9 @@
   });
 
   campoCodigo.addEventListener('keydown', evento => {
-    if (evento.key === 'Enter') validarCodigo(campoCodigo.value);
+    if (evento.key === 'Enter') {
+      validarCodigo(campoCodigo.value);
+    }
   });
 
   document.getElementById('iniciar').addEventListener('click', async () => {
@@ -221,7 +263,10 @@
       mostrar('Solicitando acceso a la cámara…');
 
       const camaras = await Html5Qrcode.getCameras();
-      if (!camaras.length) throw new Error('No se encontraron cámaras.');
+
+      if (!camaras.length) {
+        throw new Error('No se encontraron cámaras.');
+      }
 
       const trasera = camaras.find(c =>
         /back|rear|environment|trasera|posterior/i.test(c.label)
@@ -241,7 +286,10 @@
       activo = true;
       mostrar('Cámara activa. Apuntá al código QR.');
     } catch (error) {
-      mostrar('No se pudo iniciar la cámara: ' + error.message, 'error');
+      mostrar(
+        'No se pudo iniciar la cámara: ' + error.message,
+        'error'
+      );
     }
   });
 
@@ -249,12 +297,83 @@
     try {
       if (lector && activo) await lector.stop();
       if (lector) lector.clear();
+
       activo = false;
       mostrar('Cámara detenida.');
     } catch (error) {
-      mostrar('Error al detener la cámara: ' + error.message, 'error');
+      mostrar(
+        'Error al detener la cámara: ' + error.message,
+        'error'
+      );
     }
   });
+
+  function cargarIngresos() {
+    if (consultandoIngresos) return;
+    consultandoIngresos = true;
+
+    const estado = document.getElementById('estado-ingresos');
+    const lista = document.getElementById('lista-ingresos');
+
+    consultarAppsScript(
+      { action: 'listarIngresos' },
+
+      respuesta => {
+        consultandoIngresos = false;
+
+        if (!respuesta || !respuesta.ok ||
+            !Array.isArray(respuesta.ingresos)) {
+          estado.textContent =
+            'No se pudo obtener la lista. Verificá Google Apps Script.';
+          return;
+        }
+
+        const ingresos = respuesta.ingresos;
+
+        estado.textContent =
+          'Total de ingresos: ' + ingresos.length +
+          ' · Actualización cada 5 segundos';
+
+        lista.replaceChildren();
+
+        if (ingresos.length === 0) {
+          const p = document.createElement('p');
+          p.className = 'pequeno';
+          p.textContent = 'Todavía no hay ingresos registrados.';
+          lista.appendChild(p);
+          return;
+        }
+
+        ingresos.forEach(ingreso => {
+          const fila = document.createElement('div');
+          fila.className = 'ingreso';
+
+          const nombre = document.createElement('strong');
+          nombre.textContent =
+            ingreso.nombre || 'Nombre no disponible';
+
+          const hora = document.createElement('small');
+          hora.textContent =
+            'Hora de ingreso: ' + (ingreso.hora || 'No disponible');
+
+          fila.appendChild(nombre);
+          fila.appendChild(hora);
+          lista.appendChild(fila);
+        });
+      },
+
+      error => {
+        consultandoIngresos = false;
+        estado.textContent = error;
+      }
+    );
+  }
+
+  document.getElementById('actualizar-ingresos')
+    .addEventListener('click', cargarIngresos);
+
+  cargarIngresos();
+  setInterval(cargarIngresos, 5000);
 </script>
 </body>
 </html>
