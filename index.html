@@ -155,13 +155,15 @@
 
     #lector {
       width: 100%;
+      min-height: 1px;
       margin: 15px 0 5px;
       overflow: hidden;
       border-radius: 14px;
     }
 
+    /* Mantener el contenedor disponible para iniciar la cámara. */
     #lector:empty {
-      display: none;
+      min-height: 1px;
     }
 
     #lector video {
@@ -575,7 +577,9 @@
 
   document.getElementById('iniciar').addEventListener('click', async () => {
     try {
-      if (!lector) lector = new Html5Qrcode('lector');
+      if (!lector) {
+        lector = new Html5Qrcode('lector');
+      }
 
       mostrar('Solicitando acceso a la cámara…');
 
@@ -605,7 +609,8 @@
 
     } catch (error) {
       mostrar(
-        'No se pudo iniciar la cámara: ' + error.message,
+        'No se pudo iniciar la cámara: ' +
+        (error.message || error),
         'error'
       );
     }
@@ -613,15 +618,21 @@
 
   document.getElementById('detener').addEventListener('click', async () => {
     try {
-      if (lector && activo) await lector.stop();
-      if (lector) lector.clear();
+      if (lector && activo) {
+        await lector.stop();
+      }
+
+      if (lector) {
+        lector.clear();
+      }
 
       activo = false;
       mostrar('Cámara detenida.');
 
     } catch (error) {
       mostrar(
-        'Error al detener la cámara: ' + error.message,
+        'Error al detener la cámara: ' +
+        (error.message || error),
         'error'
       );
     }
