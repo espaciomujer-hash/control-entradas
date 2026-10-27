@@ -44,7 +44,37 @@
     .error { background: #ffe0e0 !important; }
     .aviso { background: #fff0c2 !important; }
     .pequeno { font-size: 13px; color: #555; }
-  </style>
+  </#panel-ingresos {
+  margin-top: 25px;
+  padding: 15px;
+  background: white;
+  border-radius: 10px;
+  text-align: left;
+}
+
+#panel-ingresos h2 {
+  font-size: 21px;
+  text-align: center;
+}
+
+#lista-ingresos {
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.ingreso {
+  padding: 12px 5px;
+  border-bottom: 1px solid #ddd;
+}
+
+.ingreso strong {
+  display: block;
+  font-size: 15px;
+}
+
+.ingreso small {
+  color: #555;
+}>
 </head>
 <body>
   <h1>Control de entradas</h1>
@@ -61,6 +91,22 @@
 
   <input id="codigo" type="text" placeholder="Ej.: T-ABC123456">
   <button id="validar">Validar ingreso</button>
+
+  <section id="panel-ingresos">
+  <h2>Ingresos registrados</h2>
+
+  <p id="estado-ingresos" class="pequeno">
+    Cargando ingresos...
+  </p>
+
+  <button id="actualizar-ingresos">
+    Actualizar ingresos
+  </button>
+
+  <div id="lista-ingresos">
+    <p class="pequeno">Esperando datos...</p>
+  </div>
+</section>
 
   <p class="pequeno">
     Cada código se puede utilizar una sola vez.
